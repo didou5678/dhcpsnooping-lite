@@ -1,0 +1,2 @@
+# dhcpsnooping-lite
+在openwrt基于ebtables实现轻量级的dhcpsnooping
