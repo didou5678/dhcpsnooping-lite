@@ -77,12 +77,12 @@ opkg install ebtables ebtables-utils kmod-ebtables kmod-ebtables-ipv4 kmod-ebtab
 
 ## 脚本 /etc/init.d/dhcpsnooping-lite 实现了这个操作
 
- 在 start 函数 添加规则
- on 网卡 你的mac地址
- 如 on br-lan 11:22:33:44:55:66
+ 在 start 函数 添加规则  
+ on 网卡 你的mac地址  
+ 如 on br-lan 11:22:33:44:55:66  
 
-在stop 函数 删除规则
-off br-lan
+在stop 函数 删除规则  
+off br-lan  
 
  
 
