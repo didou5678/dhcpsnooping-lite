@@ -58,6 +58,8 @@ config switch_vlan
 	option vid '55'  
 	option ports '0t 5'  
 
+## 在openwrt 安装 ebtables
+opkg install ebtables ebtables-utils kmod-ebtables kmod-ebtables-ipv4 kmod-ebtables-ipv6 
 
  
 ## 使用ebtables 抑制 非信任dhcp服务端的报文
