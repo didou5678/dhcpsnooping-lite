@@ -74,9 +74,6 @@ fi
 off() {
 IFACE=$1
 [ -z ${IFACE} ] && IFACE=br-lan
-DHCPDMAC=$2
-PRESETMAC=11:22:33:44:55:66  
-[ -z ${DHCPDMAC} ] && DHCPDMAC=$PRESETMAC
 
 ebtables -t filter -D INPUT --logical-in $IFACE -p ipv4 --ip-protocol udp --ip-source-port   67 -j DHCPSNOOPING_IN >/dev/null 2>&1
 ebtables -t filter -D FORWARD --logical-in $IFACE -p ipv4 --ip-protocol udp --ip-source-port  67 -j  DHCPSNOOPING_FWD >/dev/null 2>&1
