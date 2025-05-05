@@ -26,6 +26,20 @@ config device
 	list ports 'eth0.33'  
 	list ports 'eth0.44'  
 	list ports 'eth0.55'  
+ 
+config interface 'lan'  
+	option device 'br-lan'  
+	option proto 'dhcp'  
+	option ip6assign '64'  
+  
+config interface 'lan6'  
+	option proto 'dhcpv6'  
+	option device 'br-lan'  
+	option reqaddress 'try'  
+	option reqprefix 'auto'  
+	option ip6ifaceid 'eui64'  
+
+
   
 config switch  
 	option name 'switch0'  
