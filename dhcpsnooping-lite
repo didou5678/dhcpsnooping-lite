@@ -1,0 +1,89 @@
+#!/bin/sh /etc/rc.common
+
+START=76
+STOP=76
+
+# /etc/init.d/dhcpsnooping-lite
+
+
+#这个脚本的实现 使用ebtables 抑制 非信任dhcp服务端的报文 --通过mac地址匹配 使记录的dhcp服务器报文通过
+#仅匹配 udp 67端口的报文是否允许通过 
+# 没有报文结构解析  当dhcpd 不使用67作为源端口时 规则不起作用
+#不是基于 switch port ,而是网桥 openwrt的 br-lan
+#可安装在 主路由和 旁路由
+
+#openwrt 要么基于dsa的交换机 
+#对于非dsa的设备 解除默认的vlan配置,然后为每个网口分配独立vlan 再然后将这些独立网卡桥接到网桥 br-lan 
+#否则ebtables无法起作用
+
+#在dhcp服务器 使用 ebtables -t filter -D OUTPUT --logical-out br-lan  -p ipv4 --ip-protocol udp  --ip-source-port  67 --among-src ! 11:22:33:44:55:66 -j DROP
+
+#一个简单实现 仅防止 其他dhcp服务器发出报文
+
+EXTRA_COMMANDS="on off"
+EXTRA_HELP=<<EOF
+on : turn on  
+off : turn off
+EOF
+
+boot() {
+start
+}
+
+start () {
+#启动 将11:22:33:44:55:66替换为dhcpd服务器所在ip的mac地址
+#如果配置多个dhcp服务器用逗号分隔每个mac地址 on br-lan 11:22:33:44:55:66,77:88:99:00:aa:bb:cc 
+on br-lan 11:22:33:44:55:66
+
+}
+
+stop() {
+off br-lan
+}
+
+
+# 参数 $1 逻辑网口 默认br-lan 
+# 参数 $2 允许的dhcpd mac地址 多个mac地址用逗号分隔
+on() {
+IFACE=$1
+[ -z ${IFACE} ] && IFACE=br-lan
+DHCPDMAC=$2
+#among-src 不能留空 如果没有配置$2参数则使用预置值
+PRESETMAC=11:22:33:44:55:66  
+[ -z ${DHCPDMAC} ] && DHCPDMAC=$PRESETMAC
+
+ebtables -t filter -N DHCPSNOOPING_IN >/dev/null 2>&1
+
+if [ $(ebtables -t filter -L INPUT |grep -c "DHCPSNOOPING_IN") -eq 0 ]; then
+ebtables -t filter -A INPUT --logical-in $IFACE -p ipv4 --ip-protocol udp --ip-source-port 67 -j DHCPSNOOPING_IN
+ebtables -t filter -A DHCPSNOOPING_IN --among-src "$DHCPDMAC" -j RETURN
+ebtables -t filter -A DHCPSNOOPING_IN -j DROP
+fi
+
+ebtables -t filter -N DHCPSNOOPING_FWD  >/dev/null 2>&1
+if [ $(ebtables -t filter -L FORWARD |grep -c "DHCPSNOOPING_FWD") -eq 0 ]; then
+ebtables -t filter -A FORWARD --logical-in $IFACE -p ipv4 --ip-protocol udp  --ip-source-port  67 -j DHCPSNOOPING_FWD
+ebtables -t filter -A DHCPSNOOPING_FWD --among-src "$DHCPDMAC" -j RETURN
+ebtables -t filter -A DHCPSNOOPING_FWD -j DROP
+fi
+
+
+}
+
+# 参数 $1 逻辑网口 默认br-lan
+off() {
+IFACE=$1
+[ -z ${IFACE} ] && IFACE=br-lan
+DHCPDMAC=$2
+PRESETMAC=11:22:33:44:55:66  
+[ -z ${DHCPDMAC} ] && DHCPDMAC=$PRESETMAC
+
+ebtables -t filter -D INPUT --logical-in $IFACE -p ipv4 --ip-protocol udp --ip-source-port   67 -j DHCPSNOOPING_IN >/dev/null 2>&1
+ebtables -t filter -D FORWARD --logical-in $IFACE -p ipv4 --ip-protocol udp --ip-source-port  67 -j  DHCPSNOOPING_FWD >/dev/null 2>&1
+ebtables -t filter -F DHCPSNOOPING_IN >/dev/null 2>&1
+ebtables -t filter -X DHCPSNOOPING_IN >/dev/null 2>&1
+ebtables -t filter -F DHCPSNOOPING_FWD >/dev/null 2>&1
+ebtables -t filter -X DHCPSNOOPING_FWD >/dev/null 2>&1
+}
+
+
