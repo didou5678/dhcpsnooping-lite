@@ -9,6 +9,7 @@ grep -s DEVTYPE=dsa /sys/class/net/*/uevent
 ### 对于非dsa的设备
 解除默认的vlan配置,然后为每个网口分配独立vlan 再然后将这些独立网卡桥接到网桥 br-lan 
 否则ebtables无法起作用
+这种配置对cpu几乎没有性能损失
 
 /etc/config/network 配置如下  
 
