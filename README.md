@@ -76,6 +76,9 @@ config switch_vlan
 	option vid '55'  
 	option ports '0t 5'  
 
+如果设备不作为交换机而是作为路由器使用,则需要保留wan口 不要port到br-lan, 然后创建基于 wan的vlan的 uci 接口
+
+
 ## 在openwrt 安装 ebtables
 opkg install ebtables ebtables-utils kmod-ebtables kmod-ebtables-ipv4 kmod-ebtables-ipv6 
 
